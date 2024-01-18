@@ -97,13 +97,7 @@ install_go() {
     if [ $? -eq 0 ]; then
         echo "Download and uncompressed success."
         # 添加Go相关环境变量到~/.bashrc
-        echo -e "export PATH=\$PATH:/usr/local/go/bin\nexport GOPATH=~/go\nexport PATH=\$PATH:~/go/bin" >> ~/.bashrc
-        if [ $? -eq 0 ]; then
-          cd "$ROOT_PATH"
-          sudo mkdir go
-          # 生效~/.bashrc
-          source ~/.bashrc
-        fi
+        echo -e "export PATH=\$PATH:/usr/local/go/bin\nexport GOPATH=/home/ubuntu\nexport PATH=\$PATH:/home/ubuntu/bin" >> ~/.bashrc
         echo "Go env needed is done."
     else
         echo "Download and uncompressed failed，please check nternet or do it on your own：$DOWNLOAD_COMMOND"
