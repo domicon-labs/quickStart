@@ -76,10 +76,12 @@ select_node_type() {
         instll_foundry
         install_make
         instll_jq
+        install_direnv
       elif [ $NODETYPE == "d_normal" ] || [ $NODETYPE == "op_normal" ]; then
         install_go
         install_git
         install_make
+        install_direnv
       else
         echo "Unknow NODETYPE:$NODETYPE"
       fi
@@ -179,7 +181,6 @@ instll_jq() {
 }
 
 install_direnv(){
-    echo "Update direnv....."
     DIRENV_HOOK='eval "$(direnv hook bash)"'
     echo -e "\n# direnv hook\n$DIRENV_HOOK" >> ~/.bashrc
     if [ $? -eq 0 ]; then
