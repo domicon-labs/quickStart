@@ -180,31 +180,23 @@ instll_jq() {
 
 install_direnv(){
     echo "Update direnv....."
-    eval "$DIRENV_DOWNLOAD_COMM"
+    DIRENV_HOOK='eval "$(direnv hook bash)"'
+    echo -e "\n# direnv hook\n$DIRENV_HOOK" >> ~/.bashrc
     if [ $? -eq 0 ]; then
-        DIRENV_HOOK='eval "$(direnv hook bash)"'
-        echo -e "\n# direnv hook\n$DIRENV_HOOK" >> ~/.bashrc
-        if [ $? -eq 0 ]; then
-            echo "Direnv hook is added success in ~/.bashrc"
-        else
-            echo "Direnv hook is add failed，please check ~/.bashrc file."
-        fi
+        echo "Direnv hook is added success in ~/.bashrc"
     else
-        echo "Update direnv failed.Do $DIRENV_DOWNLOAD_COMM by yourself."
+        echo "Direnv hook is add failed，please check ~/.bashrc file."
     fi
-
 }
 
 main() {
     initenv_getstart
-    if [ ACTION == "init env" ];then
-        install_direnv
-        echo "NOTE!!! You should do !!! : \n1.source /home/ubuntu/.bashrc. when initenv.sh is finished. \n2. input foundryup in the terminal to finished Foundry Installation.\n"
+    if [ $ACTION == "init env" ];then
+        echo "NOTE!!! You should do !!! :\n1.Do source /home/ubuntu/.bashrc. When initenv.sh is finished.\n2.Input $DIRENV_DOWNLOAD_COMM do the Direnv Installation.Conf was written into /home/ubuntu/.bashrc file. Please do  source /home/ubuntu/.bashrc again.\n3.Input foundryup in the terminal to finished Foundry Installation.\n"
     
         echo "You can run versions.sh to check version"
     fi
     
-  
   
 }
 
