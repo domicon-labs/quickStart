@@ -182,15 +182,22 @@ install_direnv(){
     else
         echo "Direnv hook is add failed，please check ~/.bashrc file."
     fi
+    
+    if [ "$ACTION" == "init env" ];then
+        if [ "$NODETYPE" == "d_sequencer" ] || [ "$NODETYPE" == "op_sequencer" ]; then
+            echo 'NOTE!!! You should do !!!:  1.Do source /home/ubuntu/.bashrc. When initenv.sh is finished.  2.Input: "curl -sfL https://direnv.net/install.sh | bash" do the Direnv Installation.Conf was written into /home/ubuntu/.bashrc file. Please do  source /home/ubuntu/.bashrc again. 3.Input foundryup in the terminal to finished Foundry Installation.'
+        elif [ "$NODETYPE" == "d_normal" ] || [ "$NODETYPE" == "op_normal" ];then
+            echo 'NOTE!!! You should do !!!: 1.Input: "curl -sfL https://direnv.net/install.sh | bash" do the Direnv Installation.Conf was written into /home/ubuntu/.bashrc file. Please do source /home/ubuntu/.bashrc.'
+            
+        fi
+        
+        echo "You can run versions.sh to check version"
+    fi
 }
 
 main() {
     initenv_getstart
-    if [ "$ACTION" == "init env" ];then
-        echo 'NOTE!!! You should do !!!:  1.Do source /home/ubuntu/.bashrc. When initenv.sh is finished.  2.Input: "curl -sfL https://direnv.net/install.sh | bash" do the Direnv Installation.Conf was written into /home/ubuntu/.bashrc file. Please do  source /home/ubuntu/.bashrc again. 3.Input foundryup in the terminal to finished Foundry Installation.'
-    
-        echo "You can run versions.sh to check version"
-    fi
+   
     
   
 }
