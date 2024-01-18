@@ -3,11 +3,11 @@
 # init env or getting start
 ACTION="init env"
 
+# bin path
+DOMICON_BIN=$(pwd -P)
+
 # the bash home path
 DOMICON_HOME_PATH=${DOMICON_BIN%/bin}
-
-# bin path
-DOMICON_BIN=$(cd $(dirname $0); pwd -P)
 
 # lib path
 DOMICON_ENV="${DOMICON_HOME_PATH}/env"
