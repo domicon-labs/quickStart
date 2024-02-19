@@ -93,8 +93,6 @@ initenv_getstart() {
             *) echo "Invalid option, please retry";;
         esac
     done
-
-    select_node_type
 }
 
 select_node_type() {
@@ -324,142 +322,82 @@ create_genesis() {
     timestamp=$(echo "$block" | awk '/timestamp/ { print $2 }')
     blockhash=$(echo "$block" | awk '/hash/ { print $2 }')
 
+    # 构建if-else语句外部的字符串
+    if_else_block=""
     if [ "$NODETYPE" == "d_normal" ] || [ "$NODETYPE" == "d_sequencer" ]; then
-        # Generate the config file
-        config=$(cat << EOL
-        {
-        "finalSystemOwner": "$ADMIN_ADDRESS",
-        "portalGuardian": "$ADMIN_ADDRESS",
-
-        "l1StartingBlockTag": "$blockhash",
-
-        "l1ChainID": $L1ChainID,
-        "l2ChainID": $L2ChainID,
-        "l2BlockTime": 10,
-        "l1BlockTime": 12,
-
-        "maxSequencerDrift": 600,
-        "sequencerWindowSize": 3600,
-        "channelTimeout": 300,
-
-        "p2pSequencerAddress": "$SEQUENCER_ADDRESS",
-        "batchInboxAddress": "0xff00000000000000000000000000000000042069",
-        "batchSenderAddress": "$BATCHER_ADDRESS",
-
-        "l2OutputOracleSubmissionInterval": 120,
-        "l2OutputOracleStartingBlockNumber": 0,
-        "l2OutputOracleStartingTimestamp": $timestamp,
-
-        "l2OutputOracleProposer": "$PROPOSER_ADDRESS",
-        "l2OutputOracleChallenger": "$ADMIN_ADDRESS",
-
-        "finalizationPeriodSeconds": 12,
-
-        "proxyAdminOwner": "$ADMIN_ADDRESS",
-        "baseFeeVaultRecipient": "$ADMIN_ADDRESS",
-        "l1FeeVaultRecipient": "$ADMIN_ADDRESS",
-        "sequencerFeeVaultRecipient": "$ADMIN_ADDRESS",
-
-        "baseFeeVaultMinimumWithdrawalAmount": "0x8ac7230489e80000",
-        "l1FeeVaultMinimumWithdrawalAmount": "0x8ac7230489e80000",
-        "sequencerFeeVaultMinimumWithdrawalAmount": "0x8ac7230489e80000",
-        "baseFeeVaultWithdrawalNetwork": 0,
-        "l1FeeVaultWithdrawalNetwork": 0,
-        "sequencerFeeVaultWithdrawalNetwork": 0,
-
-        "gasPriceOracleOverhead": 2100,
-        "gasPriceOracleScalar": 1000000,
-
-        "enableGovernance": true,
+        if_else_block='
         "governanceTokenSymbol": "DC",
-        "governanceTokenName": "Domicon",
-        "governanceTokenOwner": "$ADMIN_ADDRESS",
-
-        "l2GenesisBlockGasLimit": "0x1c9c380",
-        "l2GenesisBlockBaseFeePerGas": "0x3b9aca00",
-        "l2GenesisRegolithTimeOffset": "0x0",
-
-        "eip1559Denominator": 50,
-        "eip1559DenominatorCanyon": 250,
-        "eip1559Elasticity": 10,
-
-        "systemConfigStartBlock": 0,
-
-        "requiredProtocolVersion": "0x0000000000000000000000000000000000000000000000000000000000000000",
-        "recommendedProtocolVersion": "0x0000000000000000000000000000000000000000000000000000000000000000"
-        }
-    EOL
-    )
-    
+        "governanceTokenName": "Domicon",'
     else
-        # Generate the config file
-        config=$(cat << EOL
-        {
-        "finalSystemOwner": "$ADMIN_ADDRESS",
-        "portalGuardian": "$ADMIN_ADDRESS",
-
-        "l1StartingBlockTag": "$blockhash",
-
-        "l1ChainID": $L1ChainID,
-        "l2ChainID": $L2ChainID,
-        "l2BlockTime": 10,
-        "l1BlockTime": 12,
-
-        "maxSequencerDrift": 600,
-        "sequencerWindowSize": 3600,
-        "channelTimeout": 300,
-
-        "p2pSequencerAddress": "$SEQUENCER_ADDRESS",
-        "batchInboxAddress": "0xff00000000000000000000000000000000042069",
-        "batchSenderAddress": "$BATCHER_ADDRESS",
-
-        "l2OutputOracleSubmissionInterval": 120,
-        "l2OutputOracleStartingBlockNumber": 0,
-        "l2OutputOracleStartingTimestamp": $timestamp,
-
-        "l2OutputOracleProposer": "$PROPOSER_ADDRESS",
-        "l2OutputOracleChallenger": "$ADMIN_ADDRESS",
-
-        "finalizationPeriodSeconds": 12,
-
-        "proxyAdminOwner": "$ADMIN_ADDRESS",
-        "baseFeeVaultRecipient": "$ADMIN_ADDRESS",
-        "l1FeeVaultRecipient": "$ADMIN_ADDRESS",
-        "sequencerFeeVaultRecipient": "$ADMIN_ADDRESS",
-
-        "baseFeeVaultMinimumWithdrawalAmount": "0x8ac7230489e80000",
-        "l1FeeVaultMinimumWithdrawalAmount": "0x8ac7230489e80000",
-        "sequencerFeeVaultMinimumWithdrawalAmount": "0x8ac7230489e80000",
-        "baseFeeVaultWithdrawalNetwork": 0,
-        "l1FeeVaultWithdrawalNetwork": 0,
-        "sequencerFeeVaultWithdrawalNetwork": 0,
-
-        "gasPriceOracleOverhead": 2100,
-        "gasPriceOracleScalar": 1000000,
-
-        "enableGovernance": true,
+        if_else_block='
         "governanceTokenSymbol": "OP",
-        "governanceTokenName": "Optimism",
-        "governanceTokenOwner": "$ADMIN_ADDRESS",
-
-        "l2GenesisBlockGasLimit": "0x1c9c380",
-        "l2GenesisBlockBaseFeePerGas": "0x3b9aca00",
-        "l2GenesisRegolithTimeOffset": "0x0",
-
-        "eip1559Denominator": 50,
-        "eip1559DenominatorCanyon": 250,
-        "eip1559Elasticity": 10,
-
-        "systemConfigStartBlock": 0,
-
-        "requiredProtocolVersion": "0x0000000000000000000000000000000000000000000000000000000000000000",
-        "recommendedProtocolVersion": "0x0000000000000000000000000000000000000000000000000000000000000000"
-        }
-    EOL
-    )
-    
+        "governanceTokenName": "Optimism",'
     fi
-    
+
+    # 在Here Document中插入if-else语句外部构建的字符串
+    config=`{
+    "finalSystemOwner": "$ADMIN_ADDRESS",
+    "portalGuardian": "$ADMIN_ADDRESS",
+
+    "l1StartingBlockTag": "$blockhash",
+
+    "l1ChainID": $L1ChainID,
+    "l2ChainID": $L2ChainID,
+    "l2BlockTime": 10,
+    "l1BlockTime": 12,
+
+    "maxSequencerDrift": 600,
+    "sequencerWindowSize": 3600,
+    "channelTimeout": 300,
+
+    "p2pSequencerAddress": "$SEQUENCER_ADDRESS",
+    "batchInboxAddress": "0xff00000000000000000000000000000000042069",
+    "batchSenderAddress": "$BATCHER_ADDRESS",
+
+    "l2OutputOracleSubmissionInterval": 120,
+    "l2OutputOracleStartingBlockNumber": 0,
+    "l2OutputOracleStartingTimestamp": $timestamp,
+
+    "l2OutputOracleProposer": "$PROPOSER_ADDRESS",
+    "l2OutputOracleChallenger": "$ADMIN_ADDRESS",
+
+    "finalizationPeriodSeconds": 12,
+
+    "proxyAdminOwner": "$ADMIN_ADDRESS",
+    "baseFeeVaultRecipient": "$ADMIN_ADDRESS",
+    "l1FeeVaultRecipient": "$ADMIN_ADDRESS",
+    "sequencerFeeVaultRecipient": "$ADMIN_ADDRESS",
+
+    "baseFeeVaultMinimumWithdrawalAmount": "0x8ac7230489e80000",
+    "l1FeeVaultMinimumWithdrawalAmount": "0x8ac7230489e80000",
+    "sequencerFeeVaultMinimumWithdrawalAmount": "0x8ac7230489e80000",
+    "baseFeeVaultWithdrawalNetwork": 0,
+    "l1FeeVaultWithdrawalNetwork": 0,
+    "sequencerFeeVaultWithdrawalNetwork": 0,
+
+    "gasPriceOracleOverhead": 2100,
+    "gasPriceOracleScalar": 1000000,
+
+    "enableGovernance": true,
+
+    $if_else_block
+
+    "governanceTokenOwner": "$ADMIN_ADDRESS",
+
+    "l2GenesisBlockGasLimit": "0x1c9c380",
+    "l2GenesisBlockBaseFeePerGas": "0x3b9aca00",
+    "l2GenesisRegolithTimeOffset": "0x0",
+
+    "eip1559Denominator": 50,
+    "eip1559DenominatorCanyon": 250,
+    "eip1559Elasticity": 10,
+
+    "systemConfigStartBlock": 0,
+
+    "requiredProtocolVersion": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "recommendedProtocolVersion": "0x0000000000000000000000000000000000000000000000000000000000000000"
+    }`
+
     cd "$DOMICON_PKG"; cd ./contracts-bedrock
     touch deploy-config/getting-started.json
     echo "$config" > deploy-config/getting-started.json
