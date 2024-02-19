@@ -93,6 +93,8 @@ initenv_getstart() {
             *) echo "Invalid option, please retry";;
         esac
     done
+    
+    select_node_type
 }
 
 select_node_type() {
