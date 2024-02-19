@@ -128,6 +128,8 @@ select_node_type() {
                 echo "normal node"
               install_go
               install_git
+              install_pnpm
+              instll_foundry
               install_make
               install_direnv
             else
