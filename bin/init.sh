@@ -140,8 +140,6 @@ select_node_type() {
     else
         # starting a node
         init_chain_type
-        
-        
     fi
 }
 
@@ -635,22 +633,24 @@ init_geth() {
 
 main() {
     initenv_getstart
-    ##创建目录
-    init_datapath
-    ##创建账户
-    create_account
-    ##填写l1 url
-    config_url
-    ##创建genesis的准备文件
-    create_genesis
-    ##将配置记录下来
-    write_env_conf
-    ##部署合约
-    deploy_contract
-    ##创建genesis以及rollup
-    generate_files
-    #init geth
-    init_geth
+    if [ "$ACTION" == "getting start" ];then
+        ##创建目录
+        init_datapath
+        ##创建账户
+        create_account
+        ##填写l1 url
+        config_url
+        ##创建genesis的准备文件
+        create_genesis
+        ##将配置记录下来
+        write_env_conf
+        ##部署合约
+        deploy_contract
+        ##创建genesis以及rollup
+        generate_files
+        #init geth
+        init_geth
+    fi
 }
 
 main
