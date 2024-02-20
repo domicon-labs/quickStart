@@ -36,17 +36,13 @@ WS_PORT=
 
 bootnode=
 
-sequencer_address=
-
-batcher_private_key=
-
-proposer_private_key=
+BROADCAST_PRIVATE_KEY=
 
 l1_RPC_URL=
 
 l1_RPC_KIND=
 
-staticnode=
+staticnode="/ip4/13.212.115.195/tcp/9003/p2p/16Uiu2HAmCeGLkZMk662awQ9KQMeWNqWhn3vZDkRQwZwbh9siRFnP"
 
 read_chain_conf() {
     first_folder=$(find $DOMICON_HOME_PATH/conf -mindepth 1 -maxdepth 1 -type d -print -quit)
@@ -74,22 +70,9 @@ start_geth() {
 
     cd $DOMICON_BIN
     
-    if [ $NODETYPE == "d_normal" ] || [ $NODETYPE == "d_sequencer" ];then
-        #domicon node
-        if [ $TYPE == "join" ];then
-           nohup ./geth --datadir $CHAIN_DATA_DIR --http --http.corsdomain=* --http.vhosts=* --http.addr=0.0.0.0 --http.api=web3,debug,eth,txpool,net,engine,admin --ws --ws.addr=0.0.0.0 --ws.port=$WS_PORT --ws.origins=* --ws.api=debug,eth,txpool,net,engine --syncmode=full --gcmode=archive --maxpeers=10 --networkid=$l2ChainID --authrpc.vhosts=* --authrpc.addr=0.0.0.0 --authrpc.port=8551 --authrpc.jwtsecret=$CHAIN_DATA_DIR/jwt.txt --rollup.disabletxpoolgossip=true --bootnodes $bootnode >> $CHAIN_DATA_DIR/geth.log 2>&1 &
-        else
-           nohup ./geth --datadir $CHAIN_DATA_DIR --http --http.corsdomain=* --http.vhosts=* --http.addr=0.0.0.0 --http.api=web3,debug,eth,txpool,net,engine,admin --ws --ws.addr=0.0.0.0 --ws.port=$WS_PORT --ws.origins=* --ws.api=debug,eth,txpool,net,engine --syncmode=full --gcmode=archive --maxpeers=10 --networkid=$l2ChainID --authrpc.vhosts=* --authrpc.addr=0.0.0.0 --authrpc.port=8551 --authrpc.jwtsecret=$CHAIN_DATA_DIR/jwt.txt --rollup.disabletxpoolgossip=true  >> $CHAIN_DATA_DIR/geth.log 2>&1 &
-            
-        fi
-    else
-        #op node
-          nohup ./geth --datadir $CHAIN_DATA_DIR --http --http.corsdomain=* --http.vhosts=* --http.addr=0.0.0.0 --http.api=web3,debug,eth,txpool,net,engine,admin --ws --ws.addr=0.0.0.0 --ws.port=$WS_PORT --ws.origins=* --ws.api=debug,eth,txpool,net,engine --syncmode=full --gcmode=archive --networkid=$l2ChainID --authrpc.vhosts=* --authrpc.addr=0.0.0.0 --authrpc.port=8551 --authrpc.jwtsecret=$CHAIN_DATA_DIR/jwt.txt --rollup.disabletxpoolgossip=true --nodiscover >> $CHAIN_DATA_DIR/geth.log 2>&1 &
-    fi
+    nohup ./geth --datadir $CHAIN_DATA_DIR --http --http.corsdomain=* --http.vhosts=* --http.addr=0.0.0.0 --http.api=web3,debug,eth,txpool,net,engine,admin --ws --ws.addr=0.0.0.0 --ws.port=$WS_PORT --ws.origins=* --ws.api=debug,eth,txpool,net,engine --syncmode=full --gcmode=archive --maxpeers=10 --networkid=$l2ChainID --authrpc.vhosts=* --authrpc.addr=0.0.0.0 --authrpc.port=8551 --authrpc.jwtsecret=$CHAIN_DATA_DIR/jwt.txt --rollup.disabletxpoolgossip=true --bootnodes $bootnode >> $CHAIN_DATA_DIR/geth.log 2>&1 &
     
-    
-    
-    pidFile="$CHAIN_DATA_DIR/geth.pid"
+    pidFile="$CHAIN_CONF_DIR/geth.pid"
     if [ ! -f $pidFile ];then
          touch $pidFile
     fi
@@ -105,40 +88,10 @@ start_node() {
     
     cd $DOMICON_BIN
     
-    if [ $TYPE == "create" ];then
-        #启动node 并记录bootNode
-        if [ $NODETYPE == "d_sequencer" ];then
-            nohup ./op-node --l2=http://localhost:8551 --l2.jwt-secret=$CHAIN_DATA_DIR/jwt.txt --sequencer.enabled --sequencer.l1-confs=5 --verifier.l1-confs=4 --rollup.config=$CHAIN_DATA_DIR/rollup.json --rpc.addr=0.0.0.0 --rpc.port=8547 --rpc.enable-admin --l1=$l1_RPC_URL --l1.rpckind=$l1_RPC_KIND  --p2p.listen.ip=0.0.0.0 --p2p.listen.tcp=9003 --p2p.listen.udp=9003 --p2p.sequencer.key=$sequencer_address >> $CHAIN_DATA_DIR/node.log 2>&1 &
-            
-            
-        else
-            nohup ./op-node --l2=http://localhost:8551 --l2.jwt-secret=$CHAIN_DATA_DIR/jwt.txt --sequencer.enabled --sequencer.l1-confs=5 --verifier.l1-confs=4 --rollup.config=$CHAIN_DATA_DIR/rollup.json --rpc.addr=0.0.0.0 --rpc.port=8547 --rpc.enable-admin --l1=$l1_RPC_URL --l1.rpckind=$l1_RPC_KIND  --p2p.sequencer.key=$sequencer_address --p2p.disable >> $CHAIN_DATA_DIR/node.log 2>&1 &
-        fi
-    else
-        #需要输入bootnode 进行链接
-        if [ $NODETYPE == "d_normal" ];then
-            
-            input_static
-            
-            nohup ./op-node --l2=http://localhost:8551 --l2.jwt-secret=./jwt.txt  --verifier.l1-confs=4 --rollup.config=./rollup.json --rpc.addr=0.0.0.0 --rpc.port=8547 --rpc.enable-admin --l1=$l1_RPC_URL --l1.rpckind=$l1_RPC_KIND  --p2p.static=$staticnode --p2p.listen.ip=0.0.0.0 --p2p.listen.tcp=9003 --p2p.listen.udp=9003 --p2p.sequencer.key=$sequencer_address >> $CHAIN_DATA_DIR/node.log 2>&1 &
-            
-        else
-            nohup ./op-node --l2=http://localhost:8551 --l2.jwt-secret=$CHAIN_DATA_DIR/jwt.txt --sequencer.enabled --sequencer.l1-confs=5 --verifier.l1-confs=4 --rollup.config=$CHAIN_DATA_DIR/rollup.json --rpc.addr=0.0.0.0 --rpc.port=8547 --rpc.enable-admin --l1=$l1_RPC_URL --l1.rpckind=$l1_RPC_KIND  --p2p.sequencer.key=$sequencer_address  --p2p.disable >> $CHAIN_DATA_DIR/node.log 2>&1 &
-        fi
-    fi
+    cp $DOMICON_HOME_PATH/chain/rollup.json  $CHAIN_DATA_DIR
     
-}
-
-input_static() {
-    read -p "Enter an static node info:"  staticnode
-    if [ ! -n "$staticnode" ];then
-        touch $CHAIN_CONF_DIR/staticnode.txt
-        echo "staticnode=$staticnode" >> $CHAIN_CONF_DIR/staticnode.txt
-        echo "Please check static node info you want connected in the path $CHAIN_CONF_DIR/staticnode.txt"
-    elif [ -z "$staticnode" ];then
-        input_static
-    fi
-
+    nohup ./op-node --l2=http://localhost:8551 --l2.jwt-secret=$CHAIN_DATA_DIR/jwt.txt --sequencer.enabled --sequencer.l1-confs=5 --verifier.l1-confs=4 --rollup.config=$CHAIN_DATA_DIR/rollup.json --rpc.addr=0.0.0.0 --rpc.port=8547 --rpc.enable-admin --l1=$l1_RPC_URL --l1.rpckind=$l1_RPC_KIND  --p2p.static=$staticnode  --p2p.listen.ip=0.0.0.0 --p2p.listen.tcp=9003 --p2p.listen.udp=9003  --private-key=$BROADCASTER_PRIVATE_KEY >> $CHAIN_DATA_DIR/node.log 2>&1 &
+    
 }
 
 # write bootnodes file
@@ -181,35 +134,12 @@ write_bootnodes_file() {
     done
 }
 
-start_batcher() {
-    echo "getting start with batcher."
-    
-    cd $DOMICON_BIN
-    
-    nohup ./batcher --l2-eth-rpc=http://localhost:8545 --rollup-rpc=http://localhost:8547 --poll-interval=1s --sub-safety-margin=6 --num-confirmations=1 -safe-abort-nonce-too-low-count=3 --resubmission-timeout=30s --rpc.addr=0.0.0.0 -rpc.port=8548 --rpc.enable-admin -max-channel-duration=1 --l1-eth-rpc=$L1_RPC_URL --private-key=$batcher_private_key >> $CHAIN_DATA_DIR/batcher.log 2>&1 &
-}
-
-start_proposer() {
-    echo "getting start with proposer."
-    
-    cd $DOMICON_BIN
-    
-    nohup .op-proposer --poll-interval=12s --rpc.port=8560 --rollup-rpc=http://localhost:8547 --l2oo-address=$(cat ../packages/contracts-bedrock/deployments/getting-started/L2OutputOracleProxy.json | jq -r .address) --private-key=$proposer_private_key --l1-eth-rpc=$L1_RPC_URL >> $CHAIN_DATA_DIR/proposer.log 2>&1 &
-
-}
-
 
 main() {
     read_chain_conf
     start_geth
     write_bootnodes_file
     start_node
-    if [ $NODETYPE == "d_sequencer" ] || [ $NODETYPE == "op_sequencer" ];then
-        start_batcher
-        
-        start_proposer
-    fi
-    
 }
 
 main

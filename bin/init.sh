@@ -24,11 +24,9 @@ CHAIN_INFO_FILE=""
 CHAIN_CONF_DIR=""
 CHAIN_DATA_DIR=""
 
-# domicon sequencer node ,domicon normal node or op normal node, op sequencer node
+# domicon sequencer node ,domicon normal node
 # value  "d_normal"  match the node type is domicon normal node
-# value  "d_sequencer"  match the node type is domicon sequencer node
-# value  "op_normal"  match the node type is op normal node
-# value  "op_sequencer"  match the node type is op sequencer node
+# value  "d_sequencer" match the node type is domicon sequencer node(domicon sequencer node can not deploy by user at this test)
 NODETYPE="d_normal"
 
 # go
@@ -81,7 +79,7 @@ MAINNET_ID=""
 TESTNET_ID=1988
 
 # boot to p2p connect
-BOOTNODEINFO=""
+BOOTNODEINFO="enode://dbffc218798fd2febbb1106aa910d336b33bc1b01267a9181b7411af57b37751f9ebcf24e5264dd5fc7fb7572d799d5830882445de76e334590d4662c2a23034@13.212.115.195:30303"
 
 # initialize a utopia blockchain
 initenv_getstart() {
@@ -99,12 +97,10 @@ initenv_getstart() {
 
 select_node_type() {
     PS3="Please pick an option that the node type you want: "
-    select opt in "domicon sequencer node" "domicon normal node" "op sequencer node" "op normal node"; do
+    select opt in "domicon sequencer node" "domicon normal node"; do
         case "$REPLY" in
             1 ) NODETYPE="d_sequencer"; break;;
             2 ) NODETYPE="d_normal"; break;;
-            3 ) NODETYPE="op_sequencer"; break;;
-            4 ) NODETYPE="op_normal"; break;;
             *) echo "Invalid option, please retry";;
         esac
     done
@@ -114,7 +110,7 @@ select_node_type() {
             echo "exec apt-get updating...."
             sudo apt-get update
         if [ $? -eq 0 ]; then
-            if [ $NODETYPE == "d_sequencer" ] || [ $NODETYPE == "op_sequencer" ]; then
+            if [ $NODETYPE == "d_sequencer" ]; then
                 echo "sequencer node"
               install_go
               install_git
@@ -124,7 +120,7 @@ select_node_type() {
               install_make
               instll_jq
               install_direnv
-            elif [ $NODETYPE == "d_normal" ] || [ $NODETYPE == "op_normal" ]; then
+            elif [ $NODETYPE == "d_normal" ]; then
                 echo "normal node"
               install_go
               install_git
@@ -141,7 +137,7 @@ select_node_type() {
     
     else
         # starting a node
-        init_chain_type
+        select_l1chain_id
     fi
 }
 
@@ -246,21 +242,9 @@ install_direnv(){
     fi
 }
 
-init_chain_type() {
-    PS3="Please pick an option: "
-    select opt in "create a new blockchain" "join an existing blockchain"; do
-        case "$REPLY" in
-            1 ) TYPE="create"; break;;
-            2 ) TYPE="join"; break;;
-            *) echo "Invalid option, please retry";;
-        esac
-    done
-    
-    select_l1chain_id
-}
-
 select_l1chain_id() {
-    read -p "Enter the L1 blockchain id to connect default L1 chainID is [5]:"  L1ChainID
+    TYPE="join"
+    read -p "Enter the L1 blockchain id to connect default L1 chainID is Sepolia chainID [11155111]:"  L1ChainID
     L1ChainID=${L1ChainID:-$L1ChainDEF_ID}
     expr $L1ChainID + 0 &>/dev/null
     if  [ $? -eq 0 ];then
@@ -296,155 +280,26 @@ init_datapath() {
     mkdir -p $CHAIN_CONF_DIR
     
     touch $CHAIN_INFO_FILE
-    
-    if [ $TYPE = join ];then
-        create_connect_bootnode_file
-    fi
-
-}
-
-create_connect_bootnode_file() {
-    read -p "Enter an bootnode info:"  BOOTNODEINFO
-    if [ ! -n "$BOOTNODEINFO" ];then
-        echo "Please check bootnode info you want connected in the path $CHAIN_CONF_DIR/bootnode.txt"
-        
-        touch $CHAIN_CONF_DIR/bootnode.txt
-        echo "bootnode=$BOOTNODEINFO" >> $CHAIN_CONF_DIR/bootnode.txt
-    elif [ -z "$BOOTNODEINFO" ];then
-        create_connect_bootnode_file
-    fi
-}
-
-create_genesis() {
-    echo "starting create start genesis file...."
-
-    # Get the finalized block timestamp and hash
-    block=$(cast block finalized --rpc-url $L1_RPC_URL)
-    timestamp=$(echo "$block" | awk '/timestamp/ { print $2 }')
-    blockhash=$(echo "$block" | awk '/hash/ { print $2 }')
-
-    # 构建if-else语句外部的字符串
-    if_else_block=""
-    if [ "$NODETYPE" == "d_normal" ] || [ "$NODETYPE" == "d_sequencer" ]; then
-        if_else_block='
-        "governanceTokenSymbol": "DC",
-        "governanceTokenName": "Domicon",'
-    else
-        if_else_block='
-        "governanceTokenSymbol": "OP",
-        "governanceTokenName": "Optimism",'
-    fi
-
-    # 在Here Document中插入if-else语句外部构建的字符串
-    config=`{
-    "finalSystemOwner": "$ADMIN_ADDRESS",
-    "portalGuardian": "$ADMIN_ADDRESS",
-
-    "l1StartingBlockTag": "$blockhash",
-
-    "l1ChainID": $L1ChainID,
-    "l2ChainID": $L2ChainID,
-    "l2BlockTime": 10,
-    "l1BlockTime": 12,
-
-    "maxSequencerDrift": 600,
-    "sequencerWindowSize": 3600,
-    "channelTimeout": 300,
-
-    "p2pSequencerAddress": "$SEQUENCER_ADDRESS",
-    "batchInboxAddress": "0xff00000000000000000000000000000000042069",
-    "batchSenderAddress": "$BATCHER_ADDRESS",
-
-    "l2OutputOracleSubmissionInterval": 120,
-    "l2OutputOracleStartingBlockNumber": 0,
-    "l2OutputOracleStartingTimestamp": $timestamp,
-
-    "l2OutputOracleProposer": "$PROPOSER_ADDRESS",
-    "l2OutputOracleChallenger": "$ADMIN_ADDRESS",
-
-    "finalizationPeriodSeconds": 12,
-
-    "proxyAdminOwner": "$ADMIN_ADDRESS",
-    "baseFeeVaultRecipient": "$ADMIN_ADDRESS",
-    "l1FeeVaultRecipient": "$ADMIN_ADDRESS",
-    "sequencerFeeVaultRecipient": "$ADMIN_ADDRESS",
-
-    "baseFeeVaultMinimumWithdrawalAmount": "0x8ac7230489e80000",
-    "l1FeeVaultMinimumWithdrawalAmount": "0x8ac7230489e80000",
-    "sequencerFeeVaultMinimumWithdrawalAmount": "0x8ac7230489e80000",
-    "baseFeeVaultWithdrawalNetwork": 0,
-    "l1FeeVaultWithdrawalNetwork": 0,
-    "sequencerFeeVaultWithdrawalNetwork": 0,
-
-    "gasPriceOracleOverhead": 2100,
-    "gasPriceOracleScalar": 1000000,
-
-    "enableGovernance": true,
-
-    $if_else_block
-
-    "governanceTokenOwner": "$ADMIN_ADDRESS",
-
-    "l2GenesisBlockGasLimit": "0x1c9c380",
-    "l2GenesisBlockBaseFeePerGas": "0x3b9aca00",
-    "l2GenesisRegolithTimeOffset": "0x0",
-
-    "eip1559Denominator": 50,
-    "eip1559DenominatorCanyon": 250,
-    "eip1559Elasticity": 10,
-
-    "systemConfigStartBlock": 0,
-
-    "requiredProtocolVersion": "0x0000000000000000000000000000000000000000000000000000000000000000",
-    "recommendedProtocolVersion": "0x0000000000000000000000000000000000000000000000000000000000000000"
-    }`
-
-    cd "$DOMICON_PKG"; cd ./contracts-bedrock
-    touch deploy-config/getting-started.json
-    echo "$config" > deploy-config/getting-started.json
-    
-    echo "getting-started.json is created in deploy-config"
 }
 
 create_account() {
     echo "Creat new accounts....."
-   
     # Generate wallets
     wallet1=$(cast wallet new)
-    wallet2=$(cast wallet new)
-    wallet3=$(cast wallet new)
-    wallet4=$(cast wallet new)
     
     # Grab wallet addresses
-    ADMIN_ADDRESS=$(echo "$wallet1" | awk '/Address/ { print $2 }')
-    BATCHER_ADDRESS=$(echo "$wallet2" | awk '/Address/ { print $2 }')
-    PROPOSER_ADDRESS=$(echo "$wallet3" | awk '/Address/ { print $2 }')
-    SEQUENCER_ADDRESS=$(echo "$wallet4" | awk '/Address/ { print $2 }')
-
+    BROADCAST_ADDRESS=$(echo "$wallet1" | awk '/Address/ { print $2 }')
+ 
     # Grab wallet private keys
-    ADMIN_KEY=$(echo "$wallet1" | awk '/Private key/ { print $3 }')
-    BATCHER_KEY=$(echo "$wallet2" | awk '/Private key/ { print $3 }')
-    PROPOSER_KEY=$(echo "$wallet3" | awk '/Private key/ { print $3 }')
-    SEQUENCER_KEY=$(echo "$wallet4" | awk '/Private key/ { print $3 }')
+    BROADCAST_KEY=$(echo "$wallet1" | awk '/Private key/ { print $3 }')
+   
 
    # Print out the environment variables to copy
     echo "Please check accounts info:"
     echo
     echo "# Admin account"
-    echo "export GS_ADMIN_ADDRESS=$ADMIN_ADDRESS"
-    echo "export GS_ADMIN_PRIVATE_KEY=$ADMIN_KEY"
-    echo
-    echo "# Batcher account"
-    echo "export GS_BATCHER_ADDRESS=$BATCHER_ADDRESS"
-    echo "export GS_BATCHER_PRIVATE_KEY=$BATCHER_KEY"
-    echo
-    echo "# Proposer account"
-    echo "export GS_PROPOSER_ADDRESS=$PROPOSER_ADDRESS"
-    echo "export GS_PROPOSER_PRIVATE_KEY=$PROPOSER_KEY"
-    echo
-    echo "# Sequencer account"
-    echo "export GS_SEQUENCER_ADDRESS=$SEQUENCER_ADDRESS"
-    echo "export GS_SEQUENCER_PRIVATE_KEY=$SEQUENCER_KEY"
+    echo "export GS_BROADCAST_ADDRESS=$BROADCAST_ADDRESS"
+    echo "export GS_BROADCAST_PRIVATE_KEY=$BROADCAST_KEY"
     echo
     echo "Account info will written into $CHAIN_INFO_FILE later"
 }
@@ -484,9 +339,6 @@ config_url() {
 }
 
 P2P_PORT=30303
-JRPC_PORT=8545
-WS_PORT=8546
-GRPC_PORT=7390
 
 write_env_conf() {
     echo "writting chain config into $CHAIN_INFO_FILE"
@@ -497,23 +349,14 @@ write_env_conf() {
     echo "l2ChainID=$L2ChainID" >> $CHAIN_INFO_FILE
     echo "host=127.0.0.1" >> $CHAIN_INFO_FILE
     echo "p2p_port=$P2P_PORT" >> $CHAIN_INFO_FILE
-    echo "jrpc_port=$JRPC_PORT" >> $CHAIN_INFO_FILE
-    echo "ws_port=$WS_PORT" >> $CHAIN_INFO_FILE
-    echo "grpc_port=$GRPC_PORT" >> $CHAIN_INFO_FILE
     echo "NODETYPE=$NODETYPE" >> $CHAIN_INFO_FILE
     echo "TYPE=$TYPE" >> $CHAIN_INFO_FILE
     
     
     # write account info
-    echo "admin_address=$ADMIN_ADDRESS" >> $CHAIN_INFO_FILE
-    echo "admin_private_key=$ADMIN_KEY" >> $CHAIN_INFO_FILE
-    echo "batcher_address=$BATCHER_ADDRESS" >> $CHAIN_INFO_FILE
-    echo "batcher_private_key=$BATCHER_KEY" >> $CHAIN_INFO_FILE
-    echo "proposer_address=$PROPOSER_ADDRESS" >> $CHAIN_INFO_FILE
-    echo "proposer_private_key=$PROPOSER_KEY" >> $CHAIN_INFO_FILE
-    echo "sequencer_address=$SEQUENCER_ADDRESS" >> $CHAIN_INFO_FILE
-    echo "sequencer_private_key=$SEQUENCER_KEY" >> $CHAIN_INFO_FILE
-    
+    echo "BROADCAST_ADDRESS=$BROADCAST_ADDRESS" >> $CHAIN_INFO_FILE
+    echo "BROADCAST_PRIVATE_KEY=$BROADCAST_KEY" >> $CHAIN_INFO_FILE
+   
     # write bootnode info
     echo "bootnode=$BOOTNODEINFO" >> $CHAIN_INFO_FILE
     
@@ -521,30 +364,10 @@ write_env_conf() {
     echo
 }
 
-deploy_contract() {
-    echo "starting deploy contract....."
-
-    cd "$DOMICON_PKG"; cd ./contracts-bedrock
-
-    forge script scripts/Deploy.s.sol:Deploy --private-key $ADMIN_KEY --broadcast --rpc-url $L1_RPC_URL --slow && wait
-    
-    echo "Attention!! If you see a nondescript error that includes EvmError: Revert and Script failed then you likely need to change the IMPL_SALT environment variable. This variable determines the addresses of various smart contracts that are deployed via CREATE2. If the same IMPL_SALT is used to deploy the same contracts twice, the second deployment will fail. You can generate a new IMPL_SALT by running ‘direnv allow’."
-
-
-    forge script scripts/Deploy.s.sol:Deploy --sig 'sync()' --rpc-url $L1_RPC_URL && wait
-    
-    echo "contract was deployed."
-    echo
-}
-
 generate_files() {
-    echo "starting generate genesis,rollup and jwt file."
+    echo "starting generate jwt file."
 
-    cd "$DOMICON_BIN"
-    
-    ./main genesis l2 --deploy-config ../packages/contracts-bedrock/deploy-config/getting-started.json --deployment-dir ../packages/contracts-bedrock/deployments/getting-started/ --outfile.l2 $CHAIN_DATA_DIR/genesis.json --outfile.rollup $CHAIN_DATA_DIR/rollup.json --l1-rpc $L1_RPC_URL && wait
-
-    echo "genesis.json and rollup.json is created in $CHAIN_DATA_DIR"
+    cd "$CHAIN_DATA_DIR"
     
     openssl rand -hex 32 > $CHAIN_DATA_DIR/jwt.txt && wait
     
@@ -558,13 +381,11 @@ init_geth() {
     
     cd "$DOMICON_BIN"
     
-    if [ $NODETYPE == "d_sequencer" ] || [ $NODETYPE == "d_normal" ];then
-        #需要执行domicon geth
-        ./geth init --datadir="$CHAIN_DATA_DIR/gethDataDir" "$CHAIN_DATA_DIR/genesis.json" && wait
-    else
-        ./geth init --datadir="$CHAIN_DATA_DIR/gethDataDir" "$CHAIN_DATA_DIR/genesis.json" && wait
-    fi
+    cp $DOMICON_HOME_PATH/chain/genesis.json  $CHAIN_DATA_DIR
     
+    #需要执行domicon geth
+    ./geth init --datadir="$CHAIN_DATA_DIR/gethDataDir" "$CHAIN_DATA_DIR/genesis.json" && wait
+
     echo "geth is inited."
     echo
     
@@ -579,13 +400,9 @@ main() {
         create_account
         ##填写l1 url
         config_url
-        ##创建genesis的准备文件
-        create_genesis
         ##将配置记录下来
         write_env_conf
-        ##部署合约
-        deploy_contract
-        ##创建genesis以及rollup
+        #创建jwt
         generate_files
         #init geth
         init_geth
