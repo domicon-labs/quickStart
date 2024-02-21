@@ -227,7 +227,7 @@ create_account() {
 config_url() {
     echo "Please conf the environment variable file...."
     echo
-    PS3="Please pick an option that Kind of L1 RPC you're connecting to, used to inform optimal transactions receipts fetching.: "
+    PS3="Please pick an option that Kind of L1 RPC you're connecting to, used to inform transactions receipts fetching.: "
     select opt in "alchemy" "quicknode" "infura" "parity" "nethermind" "debug_geth" "erigon" "basic" "any"; do
         case "$REPLY" in
             1 ) L1_RPC_KIND="alchemy"; break;;

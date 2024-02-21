@@ -17,20 +17,14 @@ version() {
 # Grab versions
 ver_git=$(version "$(git --version)")
 ver_go=$(version "$(go version)")
-ver_node=$(version "$(node --version)")
 ver_pnpm=$(version "$(pnpm --version)")
-ver_foundry=$(version "$(forge --version)")
 ver_make=$(version "$(make --version)")
-ver_jq=$(version "$(jq --version)")
-ver_direnv=$(version "$(direnv --version)")
+
 
 # Print versions
 echo "Dependency | Minimum | Actual"
 echo "git          2         $ver_git"
 echo "go           1.21      $ver_go"
-echo "node         20        $ver_node"
 echo "pnpm         8         $ver_pnpm"
-echo "foundry      0.2.0     $ver_foundry"
 echo "make         3         $ver_make"
-echo "jq           1.6       $ver_jq"
-echo "direnv       2         $ver_direnv"
+
