@@ -96,41 +96,17 @@ initenv_getstart() {
 }
 
 select_node_type() {
-    PS3="Please pick an option that the node type you want: "
-    select opt in "domicon sequencer node" "domicon normal node"; do
-        case "$REPLY" in
-            1 ) NODETYPE="d_sequencer"; break;;
-            2 ) NODETYPE="d_normal"; break;;
-            *) echo "Invalid option, please retry";;
-        esac
-    done
-     
+    NODETYPE="d_normal"
     if [ "$ACTION" == "init env" ];then
             ##init env
             echo "exec apt-get updating...."
             sudo apt-get update
         if [ $? -eq 0 ]; then
-            if [ $NODETYPE == "d_sequencer" ]; then
-                echo "sequencer node"
-              install_go
-              install_git
-              install_node
-              install_pnpm
-              instll_foundry
-              install_make
-              instll_jq
-              install_direnv
-            elif [ $NODETYPE == "d_normal" ]; then
-                echo "normal node"
+              echo "normal node"
               install_go
               install_git
               install_pnpm
-              instll_foundry
               install_make
-              install_direnv
-            else
-                echo "Unknow NODETYPE:$NODETYPE"
-            fi
         else
             echo "Sudo apt-get update failed，please check nternet or do it on your own。"
         fi
@@ -164,25 +140,6 @@ install_git() {
     fi
 }
 
-install_node() {
-    echo "Nodejs package uncompressing....."
-    cd "$DOMICON_ENV"
-    sudo cp node.tar "$ROOT_PATH"
-    if [ $? -eq 0 ]; then
-        cd "$ROOT_PATH"
-        sudo tar -zxf node.tar -C /usr/local
-        if [ $? -eq 0 ]; then
-            echo "Uncompressed nodejs success."
-            echo -e "export PATH=\$PATH:/usr/local/node/bin\n" >> ~/.bashrc
-            if [ $? -eq 0 ]; then
-                echo "Node env needed is done."
-            fi
-        fi
-    else
-        echo "Uncompressing nodejs failed."
-    fi
-}
-
 install_pnpm() {
     echo "Update pnpm....."
     eval "$PNPM_DOWNLOAD_COMM"
@@ -193,52 +150,15 @@ install_pnpm() {
     fi
 }
 
-instll_foundry() {
-    echo "Update foundry....."
-    FOUNDRY_DOWNLOAD_COMM="curl -L https://foundry.paradigm.xyz | bash"
-    eval "$FOUNDRY_DOWNLOAD_COMM"
-    if [ $? -eq 0 ]; then
-        echo "NOTE!!! You should do !!! : 1.source /home/ubuntu/.bashrc. when initenv.sh is finished. 2. input foundryup in the terminal..... \n"
-    else
-        echo "Pnpm update failed，please check nternet or do it on your own:$FOUNDRY_DOWNLOAD_COMM."
-    fi
-}
-
 install_make() {
     echo "Update make...."
     sudo apt-get install make
     if [ $? -eq 0 ]; then
        echo "Update make success"
+       
+    echo 'NOTE!!! You should do !!!:  1.Do source /home/ubuntu/.bashrc. When initenv.sh is finished.'
     else
        echo "Update make failed"
-    fi
-}
-
-instll_jq() {
-    echo "Update jq....."
-    sudo apt-get install jq
-    if [ $? -eq 0 ]; then
-       echo "Update jq success"
-    else
-       echo "Update jq failed"
-    fi
-}
-
-install_direnv(){
-    DIRENV_HOOK='eval "$(direnv hook bash)"'
-    echo -e "\n# direnv hook\n$DIRENV_HOOK" >> ~/.bashrc
-    if [ $? -eq 0 ]; then
-        echo "Direnv hook is added success in ~/.bashrc"
-    else
-        echo "Direnv hook is add failed，please check ~/.bashrc file."
-    fi
-    
-    if [ "$ACTION" == "init env" ];then
-        echo
-        echo 'NOTE!!! You should do !!!:  1.Do source /home/ubuntu/.bashrc. When initenv.sh is finished.  2.Input: "curl -sfL https://direnv.net/install.sh | bash" do the Direnv Installation. Conf was written into /home/ubuntu/.bashrc file. Please do  source /home/ubuntu/.bashrc again. 3.Input: "foundryup" in the terminal to finished Foundry Installation.'
-       
-        echo "You can run versions.sh to check version"
-        echo
     fi
 }
 

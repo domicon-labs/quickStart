@@ -92,6 +92,15 @@ start_node() {
     
     nohup ./op-node --l2=http://localhost:8551 --l2.jwt-secret=$CHAIN_DATA_DIR/jwt.txt --sequencer.enabled --sequencer.l1-confs=5 --verifier.l1-confs=4 --rollup.config=$CHAIN_DATA_DIR/rollup.json --rpc.addr=0.0.0.0 --rpc.port=8547 --rpc.enable-admin --l1=$l1_RPC_URL --l1.rpckind=$l1_RPC_KIND  --p2p.static=$staticnode  --p2p.listen.ip=0.0.0.0 --p2p.listen.tcp=9003 --p2p.listen.udp=9003  --private-key=$BROADCASTER_PRIVATE_KEY >> $CHAIN_DATA_DIR/node.log 2>&1 &
     
+    pidFile="$CHAIN_CONF_DIR/node.pid"
+    if [ ! -f $pidFile ];then
+         touch $pidFile
+    fi
+
+    echo $! > $pidFile
+    echo "geth is started. pid is written into $pidFile."
+    echo
+    
 }
 
 # write bootnodes file
@@ -135,11 +144,50 @@ write_bootnodes_file() {
 }
 
 
+write_staticnode_file(){
+    echo "find self staticNode info from log."
+    
+   staticNodeFile="$CHAIN_CONF_DIR/staticNode.txt"
+    if ! test -e $staticNodeFile;then
+         touch $staticNodeFile
+    fi
+
+    i=1
+    while true
+    do
+        num_staticNode=`grep -c 'started p2p host' $CHAIN_DATA_DIR/node.log`
+        if [ $num_bootnodes -ne 0 ];then
+            peerID=$(grep -oP 'peerID=\K\S+' "$logfile")
+            ips=0
+            for i in `ifconfig | grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}' | grep -v '127\|255\|0.0.0.0'`;do
+            if [ $ips -eq 0 ];then
+                echo -n "/ip4/$i/tcp/9003/p2p/$peerID" >> $staticNodeFile;
+            else
+                echo -n ",/ip4/$i/tcp/9003/p2p/$peerID" >> $staticNodeFile;
+            fi
+            let ips++
+            done
+            break
+        else
+         i=`expr ${i} + 1`
+         if [ $i -gt 7 ];then
+            echo  "can not find bootnode info, utopia start may have failed, please check $CHAIN_DATA_DIR/node.log"
+            break
+         else
+            sleep 1
+         fi
+    fi
+    done
+    
+
+}
+
 main() {
     read_chain_conf
     start_geth
     write_bootnodes_file
     start_node
+    write_staticnode_file
 }
 
 main
