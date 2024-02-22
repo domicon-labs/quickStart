@@ -143,7 +143,7 @@ write_bootnodes_file() {
 write_staticnode_file(){
     echo "find self staticNode info from log."
     
-   staticNodeFile="$CHAIN_CONF_DIR/staticNode.txt"
+    staticNodeFile="$CHAIN_CONF_DIR/staticNode.txt"
     if ! test -e $staticNodeFile;then
          touch $staticNodeFile
     fi
@@ -153,12 +153,12 @@ write_staticnode_file(){
     do
         num_staticNode=`grep -c 'started p2p host' $CHAIN_DATA_DIR/node.log`
         if [ $num_bootnodes -ne 0 ];then
-            peerID=$(grep -oP 'peerID=\K\S+' "$logfile")
+            staticNode=`grep 'started p2p host' $CHAIN_DATA_DIR/node.log`
+            peerID=$(echo "$staticNode" | grep -oP 'peerID=\K\S+')
             ips=0
             for i in `ifconfig | grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}' | grep -v '127\|255\|0.0.0.0'`;do
             if [ $ips -eq 0 ];then
                 echo -n "/ip4/$i/tcp/9003/p2p/$peerID" >> $staticNodeFile;
-                echo "/ip4/$i/tcp/9003/p2p/$peerID"
             else
                 echo -n ",/ip4/$i/tcp/9003/p2p/$peerID" >> $staticNodeFile;
             fi
