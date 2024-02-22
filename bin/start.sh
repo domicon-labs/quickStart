@@ -175,12 +175,19 @@ write_staticnode_file(){
          fi
     fi
     done
-    
+}
+
+install_net() {
+    echo "install net-tools"
+    sudo apt update
+    sudo apt install net-tools
 
 }
 
+
 main() {
     read_chain_conf
+    install_net
     start_geth
     write_bootnodes_file
     start_node
