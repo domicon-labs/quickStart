@@ -86,7 +86,14 @@ start_node() {
     
     cd $DOMICON_BIN
     
-    nohup ./node --l2=http://localhost:8551 --l2.jwt-secret=$CHAIN_DATA_DIR/jwt.txt --sequencer.enabled --sequencer.l1-confs=5 --verifier.l1-confs=4 --rollup.config=$DOMICON_HOME_PATH/chain/rollup.json --rpc.addr=0.0.0.0 --rpc.port=8547 --rpc.enable-admin --l1=$l1_RPC_URL --l1.rpckind=$l1_RPC_KIND  --p2p.static=$staticnode  --p2p.listen.ip=0.0.0.0 --p2p.listen.tcp=9003 --p2p.listen.udp=9003  --private-key=$BROADCAST_PRIVATE_KEY >> $CHAIN_DATA_DIR/node.log 2>&1 &
+    nohup ./node --l2=http://localhost:8551 --l2.jwt-secret=$CHAIN_DATA_DIR/jwt.txt --sequencer.enabled --sequencer.l1-confs=5 --verifier.l1-confs=4 --rollup.config=$DOMICON_HOME_PATH/chain/rollup.json --rpc.addr=0.0.0.0 --rpc.port=8547 --rpc.enable-admin --l1=$l1_RPC_URL --l1.rpckind=$l1_RPC_KIND  --p2p.static=$staticnode  --p2p.listen.ip=0.0.0.0 --p2p.listen.tcp=9003 --p2p.listen.udp=9003   --private-key=$BROADCAST_PRIVATE_KEY >> $CHAIN_DATA_DIR/node.log 2>&1 &
+    
+    
+    echo "DOMICON_HOME_PATH:$DOMICON_HOME_PATH"
+    echo "l1_RPC_URL:$l1_RPC_URL"
+    echo "l1_RPC_KIND:$l1_RPC_KIND"
+    echo "staticnode:$staticnode"
+    echo "BROADCAST_PRIVATE_KEY:$BROADCAST_PRIVATE_KEY"
     
     pidFile="$CHAIN_CONF_DIR/node.pid"
     if [ ! -f $pidFile ];then
