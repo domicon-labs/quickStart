@@ -90,7 +90,7 @@ start_node() {
     
     cp $DOMICON_HOME_PATH/chain/rollup.json  $CHAIN_DATA_DIR
     
-    nohup ./op-node --l2=http://localhost:8551 --l2.jwt-secret=$CHAIN_DATA_DIR/jwt.txt --sequencer.enabled --sequencer.l1-confs=5 --verifier.l1-confs=4 --rollup.config=$CHAIN_DATA_DIR/rollup.json --rpc.addr=0.0.0.0 --rpc.port=8547 --rpc.enable-admin --l1=$l1_RPC_URL --l1.rpckind=$l1_RPC_KIND  --p2p.static=$staticnode  --p2p.listen.ip=0.0.0.0 --p2p.listen.tcp=9003 --p2p.listen.udp=9003  --private-key=$BROADCASTER_PRIVATE_KEY >> $CHAIN_DATA_DIR/node.log 2>&1 &
+    nohup ./node --l2=http://localhost:8551 --l2.jwt-secret=$CHAIN_DATA_DIR/jwt.txt --sequencer.enabled --sequencer.l1-confs=5 --verifier.l1-confs=4 --rollup.config=$CHAIN_DATA_DIR/rollup.json --rpc.addr=0.0.0.0 --rpc.port=8547 --rpc.enable-admin --l1=$l1_RPC_URL --l1.rpckind=$l1_RPC_KIND  --p2p.static=$staticnode  --p2p.listen.ip=0.0.0.0 --p2p.listen.tcp=9003 --p2p.listen.udp=9003  --private-key=$BROADCASTER_PRIVATE_KEY >> $CHAIN_DATA_DIR/node.log 2>&1 &
     
     pidFile="$CHAIN_CONF_DIR/node.pid"
     if [ ! -f $pidFile ];then
