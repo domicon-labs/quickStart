@@ -32,8 +32,6 @@ TYPE=""
 
 p2p_port=
 
-WS_PORT=
-
 bootnode=
 
 BROADCAST_PRIVATE_KEY=
@@ -70,7 +68,7 @@ start_geth() {
 
     cd $DOMICON_BIN
     
-    nohup ./geth --datadir $CHAIN_DATA_DIR --http --http.corsdomain=* --http.vhosts=* --http.addr=0.0.0.0 --http.api=web3,debug,eth,txpool,net,engine,admin --ws --ws.addr=0.0.0.0 --ws.port=$WS_PORT --ws.origins=* --ws.api=debug,eth,txpool,net,engine --syncmode=full --gcmode=archive --maxpeers=10 --networkid=$l2ChainID --authrpc.vhosts=* --authrpc.addr=0.0.0.0 --authrpc.port=8551 --authrpc.jwtsecret=$CHAIN_DATA_DIR/jwt.txt --rollup.disabletxpoolgossip=true --bootnodes $bootnode >> $CHAIN_DATA_DIR/geth.log 2>&1 &
+    nohup ./geth --datadir $CHAIN_DATA_DIR --http --http.corsdomain=* --http.vhosts=* --http.addr=0.0.0.0 --http.api=web3,debug,eth,txpool,net,engine,admin --ws --ws.addr=0.0.0.0 --ws.port=8546 --ws.origins=* --ws.api=debug,eth,txpool,net,engine --syncmode=full --gcmode=archive --maxpeers=10 --networkid=$l2ChainID --authrpc.vhosts=* --authrpc.addr=0.0.0.0 --authrpc.port=8551 --authrpc.jwtsecret=$CHAIN_DATA_DIR/jwt.txt --rollup.disabletxpoolgossip=true --bootnodes $bootnode >> $CHAIN_DATA_DIR/geth.log 2>&1 &
     
     pidFile="$CHAIN_CONF_DIR/geth.pid"
     if [ ! -f $pidFile ];then
@@ -88,9 +86,7 @@ start_node() {
     
     cd $DOMICON_BIN
     
-    cp $DOMICON_HOME_PATH/chain/rollup.json  $CHAIN_DATA_DIR
-    
-    nohup ./node --l2=http://localhost:8551 --l2.jwt-secret=$CHAIN_DATA_DIR/jwt.txt --sequencer.enabled --sequencer.l1-confs=5 --verifier.l1-confs=4 --rollup.config=$CHAIN_DATA_DIR/rollup.json --rpc.addr=0.0.0.0 --rpc.port=8547 --rpc.enable-admin --l1=$l1_RPC_URL --l1.rpckind=$l1_RPC_KIND  --p2p.static=$staticnode  --p2p.listen.ip=0.0.0.0 --p2p.listen.tcp=9003 --p2p.listen.udp=9003  --private-key=$BROADCASTER_PRIVATE_KEY >> $CHAIN_DATA_DIR/node.log 2>&1 &
+    nohup ./node --l2=http://localhost:8551 --l2.jwt-secret=$CHAIN_DATA_DIR/jwt.txt --sequencer.enabled --sequencer.l1-confs=5 --verifier.l1-confs=4 --rollup.config=$DOMICON_HOME_PATH/chain/rollup.json --rpc.addr=0.0.0.0 --rpc.port=8547 --rpc.enable-admin --l1=$l1_RPC_URL --l1.rpckind=$l1_RPC_KIND  --p2p.static=$staticnode  --p2p.listen.ip=0.0.0.0 --p2p.listen.tcp=9003 --p2p.listen.udp=9003  --private-key=$BROADCASTER_PRIVATE_KEY >> $CHAIN_DATA_DIR/node.log 2>&1 &
     
     pidFile="$CHAIN_CONF_DIR/node.pid"
     if [ ! -f $pidFile ];then
@@ -162,6 +158,7 @@ write_staticnode_file(){
             for i in `ifconfig | grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}' | grep -v '127\|255\|0.0.0.0'`;do
             if [ $ips -eq 0 ];then
                 echo -n "/ip4/$i/tcp/9003/p2p/$peerID" >> $staticNodeFile;
+                echo "/ip4/$i/tcp/9003/p2p/$peerID"
             else
                 echo -n ",/ip4/$i/tcp/9003/p2p/$peerID" >> $staticNodeFile;
             fi
