@@ -178,10 +178,13 @@ write_staticnode_file(){
 }
 
 install_net() {
-    echo "install net-tools"
-    sudo apt update
-    sudo apt install net-tools
-
+    if dpkg -l | grep -q "net-tools"; then
+        echo "net-tools already installed"
+    else
+        echo "install net-tools"
+        sudo apt update
+        sudo apt install net-tools
+    fi
 }
 
 
